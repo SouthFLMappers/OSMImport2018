@@ -201,7 +201,7 @@ class DBHandler():
     def simplify_buildings(self):
         # Simplify geometry using 0.3m tolerance (get rid of unnecesary nodes
         self.cursor.execute("update osm_buildings set geom = st_transform(st_simplify(st_transform(geom, 3857), 0.3), 4326) where st_geometrytype(geom) != 'ST_Point'")
-        self.connection.commit()
+        self.conn.commit()
 
     def add_fields_input_data(self):
         self.cursor.execute('alter table address_with_condo drop column if exists in_osm')
@@ -235,7 +235,7 @@ class DBHandler():
                             where 
                                 st_within(county.geom, osm.geom) and county.hse_num::varchar = (osm.tags->'addr:housenumber')::varchar
         ''')
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute('''
                         update address_with_condo county
                             set in_osm = True
