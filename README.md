@@ -1,4 +1,4 @@
-# Miami-Dade County Large Building Import
+# Miami-Dade County Address + Building (+POI?) Import
 
 
 Software tools and technical description of the Miami-Dade OSM import in 2018
