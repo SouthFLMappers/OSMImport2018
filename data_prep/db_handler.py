@@ -193,54 +193,6 @@ class DBHandler():
             i += 1
         return coord_list
 
-    def move_self_intersect(self):
-        sql = '''
-            select array_agg(objectid) from buildings_no_overlap 
-            WHERE st_isvalid(geom) is false
-        '''
-        self.cursor.execute(sql)
-        try:
-            ids_to_move = tuple(self.cursor.fetchone()[0])
-        except TypeError:
-            print 'No self intersecting buildings.'
-            return
-        # Move those buildings to the manual bucket
-        insert_sql = '''
-            INSERT INTO buildings_overlap (objectid, source, year_upd, height, zip, city, sname, house_num, pre_dir, st_name, st_type, suf_dir, geom) 
-            (select objectid, source, year_upd, height, zip, city, sname, house_num, pre_dir, st_name, st_type, suf_dir, geom from buildings_no_overlap b
-            where b.objectid IN %s)
-        '''
-        self.cursor.execute(insert_sql, (ids_to_move, ))
-        self.conn.commit()
-        # Remove buildings from bulk table
-        self.cursor.execute('DELETE FROM buildings_no_overlap where objectid in %s;', (ids_to_move, ))
-        print 'Moved %s buildings to manual bucket.' % len(ids_to_move)
-        self.conn.commit()
-
-    def move_intersect(self):
-        sql = '''
-            select  array_agg(distinct b1.objectid) from buildings_no_overlap b1, buildings_no_overlap b2 where
-                st_intersects(b1.geom, b2.geom) and b1.objectid != b2.objectid
-        '''
-        self.cursor.execute(sql)
-        try:
-            ids_to_move = tuple(self.cursor.fetchone()[0])
-        except TypeError:
-            print 'No buildings with shared borders.'
-            return
-        # Move those buildings to the manual bucket
-        insert_sql = '''
-            INSERT INTO buildings_overlap (objectid, source, year_upd, height, zip, city, sname, house_num, pre_dir, st_name, st_type, suf_dir, geom) 
-            (select objectid, source, year_upd, height, zip, city, sname, house_num, pre_dir, st_name, st_type, suf_dir, geom from buildings_no_overlap b
-            where b.objectid IN %s)
-        '''
-        self.cursor.execute(insert_sql, (ids_to_move, ))
-        self.conn.commit()
-        # Remove buildings from bulk table
-        self.cursor.execute('DELETE FROM buildings_no_overlap where objectid in %s;', (ids_to_move, ))
-        print 'Moved %s buildings to manual bucket.' % len(ids_to_move)
-        self.conn.commit()
-
     def convert_to_poly(self):
         self.cursor.execute("update osm_addresses set geom = st_makepolygon(geom) where st_geometrytype(geom)  != 'ST_Point'")
         self.cursor.execute("update osm_buildings set geom = st_makepolygon(geom) where st_geometrytype(geom)  != 'ST_Point'")
