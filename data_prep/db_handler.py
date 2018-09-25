@@ -194,9 +194,9 @@ class DBHandler():
         return coord_list
 
     def convert_to_poly(self):
-        self.cursor.execute("update osm_addresses set geom = st_makepolygon(geom) where st_geometrytype(geom)  != 'ST_Point'")
-        self.cursor.execute("update osm_buildings set geom = st_makepolygon(geom) where st_geometrytype(geom)  != 'ST_Point'")
-        self.connection.commit()
+        self.cursor.execute("update osm_addresses set geom = st_buildarea(geom) where st_geometrytype(geom)  != 'ST_Point'")
+        self.cursor.execute("update osm_buildings set geom = st_buildarea(geom) where st_geometrytype(geom)  != 'ST_Point'")
+        self.conn.commit()
 
     def simplify_buildings(self):
         # Simplify geometry using 0.3m tolerance (get rid of unnecesary nodes
