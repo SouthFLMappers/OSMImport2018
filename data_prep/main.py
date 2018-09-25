@@ -9,18 +9,19 @@ def get_args():
     p.add_argument('-bd', '--buildings_download', help='Download Buildings from OSM', action="store_true")
     p.add_argument('-ad', '--address_download', help='Download Addresses from OSM', action="store_true")
     p.add_argument('-rd', '--roads_download', help='Download highway=* from OSM', action="store_true")
-    p.add_argument('-b', '--bbox', help='BBOX for OSM download (min_lat, min_long, max_lat, max_long). Whole extent of Large buildings is used if left empty')
-    p.add_argument('-msi', '--move_self_intersect', help='Moves self intersecting buildings to manual bucket.', action="store_true")
-    p.add_argument('-de', '--delete_err', help='Removes erroneous buildings ', action='store_true')
-    p.add_argument('-mi', '--move_intersect', help='Moves buildings that share common border to manual bucket', action="store_true")
     p.add_argument('-d', '--dsn', help='Dsn for database connection.')
-    p.add_argument('-i', '--intersect', help='Performs intersection of Large Buildings and OSM buildings.', action="store_true")
+    p.add_argument('-s', '--simplify', help='Simplify geometry of import buildings', action='store_true')
+    p.add_argument('-af', '--add_fields', help='Add/reset logical fields to import data.', action='store_true')
     p.add_argument('-v', '--vacuum', help='Vacuums Postgres DB.', action="store_true")
-    p.add_argument('-ca', '--check_address', help='Checks whether buildings to upload overlap with existing OSM addresses.', action="store_true")
+    p.add_argument('-cp', '--convert_poly', help='Convert OSM features from Overpass to polygon',  action='store_true')
+    p.add_argument('-dd', '--dedupe_address',  help='Get rid of overlapping address points (unit)',  action='store_true')
+    p.add_argument('-ca', '--check_address', help='Checks if addresses overlap with existing addresses.', action="store_true")
+    p.add_argument('-cb', '--check_building', help='Checks whether buildings to upload overlap with existing OSM buildings.', action="store_true")
     p.add_argument('-crr', '--check_road_rail', help='Checks whether buildings to upload overlap with OSM highway=* or railway=*.', action="store_true")
     p.add_argument('-idx', '--index_data', help='Creates indexes on several tables.', action="store_true")
     p.add_argument('-a', '--assign_address', help='Assigns an address to buildings with only 1 overlapping address point.', action="store_true")
     p.add_argument('-r', '--report', help='Prints out a quick report.', action="store_true")
+    p.add_argument('-b', '--bbox', help='Bounding box for data download, overpass format.')
     return p.parse_args()
 
 if __name__ == "__main__":
@@ -29,18 +30,19 @@ if __name__ == "__main__":
     building_download = args["buildings_download"]
     address_download = args["address_download"]
     roads_download = args["roads_download"]
-    delete_err = args["delete_err"]
-    move_self_intersect = args["move_self_intersect"]
-    move_intersect = args["move_intersect"]
+    simplify = args["simplify"]
     dsn = args["dsn"]
-    intersect = args["intersect"]
-    address = args["assign_address"]
+    assign_address = args["assign_address"]
     check_address = args["check_address"]
+    check_building = args["check_building"]
     check_road_rail = args["check_road_rail"]
     vacuum = args["vacuum"]
     report = args["report"]
     index = args["index_data"]
     bbox = args["bbox"]
+    add_fields = args["add_fields"]
+    dedupe = args["dedupe_address"]
+    convert_poly = args["convert_poly"]
 
     db = DBHandler(dsn)
     osm = OSMHandler(bbox)
@@ -53,19 +55,23 @@ if __name__ == "__main__":
         print 'Querying OverpassAPI for buildings.'
         buildings = osm.query_buildings()
         print 'Uploading OSM buildings to Postgres...'
-        db.upload_osm(buildings, 'osm_buildings')
+        db.insert_osm(buildings, 'osm_buildings')
 
     if address_download:
         print 'Querying OverpassAPI for addresses.'
         addresses = osm.query_address()
         print 'Uploading OSM addresses to Postgres...'
-        db.upload_osm(addresses, 'osm_addresses')
+        db.insert_osm(addresses, 'osm_addresses')
+
+    if dedupe:
+        print 'Getting rid of overlapping address points...'
+        db.dedupe_address()
 
     if roads_download:
         print 'Querying OverpassAPI for highway=* and railway=*.'
         roads = osm.query_roads()
         print 'Uploading OSM highway=* and railway=* to Postgres...'
-        db.upload_osm(roads, 'osm_highway_railway')
+        db.insert_osm(roads, 'osm_highway_railway')
 
     if vacuum:
         print 'Updating DB stats.'
@@ -75,33 +81,33 @@ if __name__ == "__main__":
         print 'Creating multiple indexes.'
         db.create_index()
 
-    if delete_err:
-        print 'Removing faulty buildings.'
-        db.delete_err_buildings()
+    if simplify:
+        print 'Simplifying import building geometries'
+        db.simplify_buildings()
 
-    if intersect:
-        print 'Intersecting OSM buildings with Large buildings. Populating tables for overlapping and non-overlapping buildings.'
-        db.do_intersection()
-
-    if move_self_intersect:
-        print 'Checking self intersecting buildings and moving them to manual bucket.'
-        db.move_self_intersect()
-
-    if move_intersect:
-        print 'Moving buildings that share common border to manual bucket'
-        db.move_intersect()
-
-    if address:
-        print 'Assigning addresses to buildings.'
-        db.update_address()
+    if add_fields:
+        print 'Adding logical fields to import data'
+        db.add_fields_input_data()
 
     if check_address:
-        print 'Checking OSM addresses in the proximity of buildings.'
-        db.check_and_move('address')
+        print 'Checking and flagging import addresses near OSM addresses...'
+        db.check_exitsing_addresses()
+
+    if check_building:
+        print 'Checking and flagging import buildings near existing buildings...'
+        db. check_existing_buildings()
+
+    if convert_poly:
+        print 'Converting closed overpass features to polygon...'
+        db.convert_to_poly()
+
+    if assign_address:
+        print 'Assigning adresses to import buildings...'
+        db.assign_address()
 
     if check_road_rail:
-        print 'Checking buildings overlapping with highway/railway.'
-        db.check_and_move('road/rail')
+        print 'Checking and flagging buildings overlapping with highway/railway.'
+        db.check_building_highway_railway()
 
     if report:
         db.print_report()

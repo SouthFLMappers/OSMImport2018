@@ -9,10 +9,11 @@ class OSMHandler():
         if bbox is not None:
             self.bbox = bbox
         else:
-            # Downtown MIA
+            # Test area
             self.bbox = '25.770098, -80.200582,25.780107,-80.185132'
-            # Extent of Large Building Footprints dataset
-            self.bbox = '25.23561, -80.87864, 25.97467, -80.11845'
+            self.bbox= '25.757413,-80.207625,25.775658,-80.1876'
+            # Extent of address dataset
+            self.bbox = '25.2672765809675,-80.6460812102679, 25.9750071473187,-80.1187632511064'
 
     def query_buildings(self):
         postdata = '''
@@ -37,6 +38,8 @@ class OSMHandler():
         [out:json][bbox:%s][timeout:180];
         (
           node["addr:housenumber"];
+          way["addr:housenumber"];
+          relation["addr:housenumber"];
         );
         out geom;
         >;
