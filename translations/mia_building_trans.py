@@ -247,7 +247,9 @@ def filterTags(attrs):
     if 'height' in attrs:
         if attrs['height'] is not None:
             # Convert feet to meters, round
-            tags['height'] = unicode(round(float(attrs['height']) * 0.3048, 1))
+            height = round(float(attrs['height']) * 0.3048, 1)
+            if height > 1:
+                tags['height'] = unicode(height)
 
     if 'zip' in attrs:
         if len(attrs['zip']) > 0:
