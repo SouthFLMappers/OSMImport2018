@@ -20,30 +20,220 @@ st_type         type of street          addr:street
 
 def pretty_type(type):
     types_dict = {
-        "CSWY": "Causeway",
+        "ALY": "Alley",
+        "ANX": "Anex",
+        "ARC": "Arcade",
         "AVE": "Avenue",
-        "ST": "Street",
-        "RD": "Road",
-        "TER": "Terrace",
-        "PKWY": "Parkway",
-        "PLZ": "Plaza",
-        "LN": "Lane",
-        "PSGE": "Passage",
-        "TRL": "Trail",
-        "PATH": "Path",
-        "HWY": "Highway",
-        "CIR": "Circle",
+        "BYU": "Bayou",
+        "BCH": "Beach",
+        "BND": "Bend",
+        "BLF": "Bluff",
+        "BLFS": "Bluffs",
+        "BTM": "Bottom",
         "BLVD": "Boulevard",
-        "WAY": "Way",
+        "BR": "Branch",
+        "BRK": "Brook",
+        "BRKS": "Brooks",
+        "BG": "Burg",
+        "BGS": "Burgs",
+        "BYP": "Bypass",
+        "CP": "Camp",
+        "CYN": "Canyon",
+        "CTR": "Center",
+        "CSWY": "Causeway",
+        "CPE": "Cape",
+        "CTRS": "Centers",
+        "CIR": "Circle",
+        "CIRS": "Circles",
+        "CLF": "Cliff",
+        "CLFS": "Cliffs",
+        "CLB": "Club",
+        "CMN": "Common",
+        "CMNS": "Commons",
+        "COR": "Corner",
+        "CORS": "Corners",
+        "CRSE": "Course",
+        "CT": "Court",
+        "CTS": "Courts",
+        "CV": "Cove",
+        "CVS": "Coves",
+        "CRK": "Creek", 
+        "CRKS": "Creeks",
+        "CRES": "Crescent",
+        "XING": "Crossing",
+        "CRST": "Crest",
+        "CURV": "Curve",
+        "XRD": "Crossroad",
+        "XRDS": "Crossroads",
+        "DL": "Dale",
+        "DM": "Dam",
+        "DV": "Divide",
         "DR": "Drive",
+        "DRS": "Drives",
+        "EST": "Estate",
+        "ESTS": "Estates",
+        "EXPY": "Expressway",
         "EXT": "Extension",
-        "PL": "Place",
-        "PT": "Point",
-        "CONC": "Concession",
+        "EXTS": "Extensions",
+        "FALL": "Fall",
+        "FLS": "Falls",
+        "FRY": "Ferry",
+        "FLD": "Field",
+        "FLDS": "Fields",
+        "FLT": "Flat",
+        "FLTS": "Flats",
+        "FRD": "Fords",
+        "FRDS": "Fords",
+        "FRST": "Forest",
+        "FRG": "Forge",
+        "FRGS": "Forges",
+        "FRK": "Fork",
+        "FRKS": "Forks",
+        "FT": "Fort",
+        "FWY": "Freeway",
+        "GDN": "Garden",
+        "GDNS": "Gardens",
+        "GTWY": "Gateway",
+        "GLN": "Glen",
+        "GLNS": "Glens",
+        "GRN": "Green",
+        "GRNS": "Greens",
+        "GRV": "Grove",
+        "GRVS": "Groves",
+        "HBR": "Harbor",
+        "HBRS": "Harbors",
+        "HVN": "Haven", 
+        "HTS": "Heights",
+        "HWY": "Highway",
+        "HL": "Hill",
+        "HLS": "Hills",
+        "HOLW": "Hollow",
+        "INLT": "Inlet",
+        "IS": "Island", 
+        "ISS": "Islands",
+        "ISLE": "Isle",
+        "JCT": "Juction", 
+        "JCTS": "Junctions",
+        "KY": "Key",
+        "KYS": "Keys",
+        "KNL": "Knoll",
+        "KNLS": "Knolls",
+        "LK": "Lake",
+        "LKS": "Lakes",
+        "LAND": "Land",
+        "LNDG": "Landing",
+        "LN": "Lane", 
+        "LGT": "Light",
+        "LGTS": "Lights",
+        "LCK": "Lock",
+        "LCKS": "Locks",
+        "LDG": "Lodge",
+        "LOOP": "Loop",
+        "MALL": "Mall",
+        "MNR": "Manor",
+        "MNRS": "Manors",
+        "MDW": "Meadow",
+        "MDWS": "Meadows",
+        "MEWS": "Mews",
+        "ML": "Mill",
+        "MLS": "Mills",
+        "MSN": "Mission",
+        "MT": "Mount",
+        "MTN": "Mountain",
+        "MNTS": "Mountains",
+        "NCK": "Neck",
+        "ORCH": "Orchard",
+        "OVAL": "Oval",
+        "OPAS": "Overpass",
+        "PARK": "Park",
+        "PKWY": "Parkway",
         "PASS": "Pass",
-        "CT": "Court"
-    }
+        "PSGE": "Passage",
+        "PATH": "Path",
+        "PIKE": "Pike",
+        "PNE": "Pine",
+        "PNES": "Pines",
+        "PL": "Place",
+        "PLN": "Plain",
+        "PLNS": "Plains",
+        "PLZ": "Plaza",
+        "PT": "Point",
+        "PTS": "Points",
+        "PRT": "Port",
+        "PRTS": "Ports",
+        "PR": "Prairie",
+        "RADL": "Radial",
+        "RAMP": "Ramp",
+        "RNCH" : "Ranch",
+        "RPD": "Rapid",
+        "RPDS": "Rapids",
+        "RST": "Rest",
+        "RDG": "Ridge",
+        "RDGS": "Ridges",
+        "RIV": "River",
+        "RD": "Road",
+        "RDS": "Roads",
+        "RTE": "Route",
+        "ROW": "Row",
+        "RUE": "Rue",
+        "SHL": "Shoals", 
+        "SHLS": "Shoals",
+        "SHR": "Shore",
+        "SHRS": "Shores",
+        "SKWY": "Skyway",
+        "SPG": "Spring",
+        "SPGS": "Springs",
+        "SPUR": "Spur",
+        "SQ": "Square",
+        "SQS": "Squares",
+        "STA": "Station",
+        "STRA": "Stravenue",
+        "STRM": "Stream",
+        "ST": "Street",
+        "STS": "Streets",
+        "SMT": "Summit",
+        "TER": "Terrace",
+        "TRWY": "Throughway",
+        "TRCE": "Trace",
+        "TRAK": "Track",
+        "TRFY": "Trafficway",
+        "TRL": "Trail",
+        "TRLR": "Trailer",
+        "TUNL": "Tunnel",
+        "TPKE": "Turnpike",
+        "UPAS": "Underpass",
+        "UN": "Union",
+        "UNS": "Unions",
+        "VLY": "Valley",
+        "VLYS": "Valleys",
+        "VIA": "Viaduct",
+        "VW": "View",
+        "VWS": "Views",
+        "VLG": "Village",
+        "VLGS": "Villages",
+        "VL": "Ville",
+        "VIS": "Vista",
+        "WALK": "Walk",
+        "WALL": "Walls",
+        "WAY": "Way",
+        "WAYS": "Ways",
+        "WL": "Well",
+        "WLS": "Wells"
+        }
     return types_dict[type]
+
+def pretty_prefix(prefix):
+    prefix_dict = {
+        "N": "North",
+        "S": "South",
+        "W": "West",
+        "E": "East",
+        "NW": "Northwest",
+        "NE": "Northeast",
+        "SW": "Southwest",
+        "SE": "Southeast"
+    }
+    return prefix_dict[prefix]
 
 def pretty_prefix(prefix):
     prefix_dict = {
@@ -62,17 +252,13 @@ def filterTags(attrs):
     if not attrs:
         return
     tags = {}
-
-    if 'objectid' in attrs:
-        tags['ref:miaaddr'] = attrs['objectid']
-
     if 'zip' in attrs:
         if len(attrs['zip']) > 0:
             tags['addr:postcode'] = attrs['zip']
 
-    if 'city' in attrs:
-        if len(attrs['city']) > 0:
-            tags['addr:city'] = capwords(attrs['city'])
+    if 'mailing_mu' in attrs:
+        if len(attrs['mailing_mu']) > 0:
+            tags['addr:city'] = capwords(attrs['mailing_mu'])
 
     street = []
 
@@ -90,16 +276,16 @@ def filterTags(attrs):
 
     if 'suf_dir' in attrs:
         if len(attrs['suf_dir']) > 0:
-            street.append(attrs['suf_dir'])
+            street.append(pretty_prefix(attrs['suf_dir']))
 
     street_name = ' '.join(street)
     if street_name is not '':
         tags['addr:street'] = street_name
 
-    if 'house_num' in attrs:
-        if len(attrs['house_num']) > 0:
-            tags['addr:housenumber'] = attrs['house_num']
+    if 'hse_num' in attrs:
+        if len(attrs['hse_num']) > 0:
+            tags['addr:housenumber'] = attrs['hse_num']
 
     #tags['source'] = 'Miami-Dade County GIS Open Data, http://gis.mdc.opendata.arcgis.com'
-
+    print tags
     return tags
