@@ -376,14 +376,14 @@ class DBHandler():
 
 
         text = '''
-        ---------------- QUICK REPORT ----------------
-        ----------------------------------------------
+        ----------------------- QUICK REPORT -----------------------
+        ------------------------------------------------------------
         Total # of unique addresses (county):                   %s
-        Total # of buildings (county):                                 %s
-        New buildings to import:                                        %s
-        New buildings with address:                                   %s
-        New buildings crossing highway/railway (fixme):   %s
-        New addr: points to import:                                    %s
-        ----------------------------------------------
+        Total # of buildings (county):                          %s
+        New buildings to import:                                %s
+        New buildings with address:                             %s
+        New buildings crossing highway/railway (fixme):         %s
+        New addr: points to import:                             %s
+        ------------------------------------------------------------
         '''
         print text % (total_address, total_bldg, new_bldg, bldg_assigned_address, bldg_highway, new_address)
