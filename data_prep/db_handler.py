@@ -233,7 +233,7 @@ class DBHandler():
                             from 
                                 (select * from osm_addresses where st_geometrytype(geom) = 'ST_Polygon') osm 
                             where 
-                                st_within(county.geom, osm.geom) and county.hse_num = (osm.tags->'addr:housenumber')::numeric
+                                st_within(county.geom, osm.geom) and county.hse_num::varchar = (osm.tags->'addr:housenumber')::numeric
         ''')
         self.connection.commit()
         self.cursor.execute('''
@@ -241,7 +241,7 @@ class DBHandler():
                             set in_osm = True
                             from osm_addresses osm 
                             where
-                                st_dwithin(county.geom::geography, osm.geom::geography, 20) and county.hse_num = (osm.tags->'addr:housenumber')::numeric
+                                st_dwithin(county.geom::geography, osm.geom::geography, 20) and county.hse_num::varchar = (osm.tags->'addr:housenumber')::numeric
         ''')
         self.connection.commit()
 
