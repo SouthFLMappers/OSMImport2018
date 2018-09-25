@@ -23,13 +23,13 @@ PLUS `osmconvert`, `ogr2osm`, ...
 
 Download the data files from here:
 ```
-Large Buildings - http://gis.mdc.opendata.arcgis.com/datasets/1e87b925717747c7b59979caa7779039_1
-Address - http://gis.mdc.opendata.arcgis.com/datasets/128dcc2c4cac403dbd1d7440e10fa583_0
+Building Footprint 2D - http://gis-mdc.opendata.arcgis.com/datasets/building-footprint-2d
+Address with condo - []
 ```
 
 ## Data preparation
 
-- Create a PostgreSQL database called osmbuildings_miami (make sure user 'postgres' with the password 'postgres' has access to it). I might make this more flexible later because right now this is kind of hardcoded into the source
+- Create a PostgreSQL database and make sure user 'postgres' with the password 'postgres' has access to it.  Until the code is cleaned, `osm_test` is hardcoded in some cases. We will make the code base f more flexible so that it can be easily used for other imports.
 - Set up the DB (extensions, tables)
 ```
 python data_prep/main.py --setup
@@ -37,67 +37,63 @@ python data_prep/main.py --setup
 
 ### Get the data
 
-- Import shapefiles to db. (I store the shapefiles in the data folder. pass it as the first argument)
+- Import shapefiles to db. (I store the shapefiles in a folder called data. Pass it as the first argument) to the following shell script. This step uses `ogr2ogr` to populate the `address_with_condo` and `building_footprint_2d` tables in Postgres.
 ```
 ./data_prep/import_shapefiles.sh data
 ```
-- Grab buildings from OverpassAPI (store them in osm_buildings table)
+
+
+The following steps import current OSM data to the same database.
+- Grab OSM buildings from OverpassAPI (store them in osm_buildings table)
 ```
 python data_prep/main.py --buildings_download
 ```
-- Grab Addresses from OverpassAPI (osm_addresses table)
+- Grab OSM Addresses from OverpassAPI (osm_addresses table)
 ```
 python data_prep/main.py --address_download
 ```
-- Grab highways/railways from OverpassAPI (osm_highway_railway)
+- Grab OSM highways/railways from OverpassAPI (osm_highway_railway)
 ```
 python data_prep/main.py --roads_download
 
 ```
-### Prepare the data for conversion
+### Prepare the data for processing/conversion
 
-- Add indexes:
+- Get rid of duplicate addresses in the import dataset (i.e. condo units).
+```
+python data_prep/main.py --dedupe_address
+```
+- Add some extra fields to tables.
+```
+python data_prep/main.py --add_fields
+```
+- Convert closed linestrings from Overpass to Polygon
+```
+python data_prep/main.py --convert_poly
+```
+- Create spatial indexes to ensure that spatial queries are effective. Update databaes statistics.
 ```
 python data_prep/main.py --index_data
-```
-- Update db statistics:
-```
 python data_prep/main.py --vacuum
 ```
-- Spatial intersection between Large Buildings and osm_buildings. Will result in 2 tables - buildings_no_overlap (for the bulk process) and buildings_overlap (for manually merging them with OSM)
-```
-python data_prep/main.py --intersect
-```
-- Delete buildings with logical errors (small area, misplaced "whole")
-```
-python data_prep/main.py --delete_err
-```
-- Assign address to 'buildings_no_overlap' where there's 1-1 building-address relation
-```
-python data_prep/main.py --assign_address
-```
-- Move self intersecting buidlings to manual bucket.
-```
-python data_prep/main.py --move_self_intersect
-```
-- Move buildings with shared borders to manual bucket.
-```
-python data_prep/main.py --move_intersect
-```
-- Check if buildings are near existing OSM addresses. Move those that are closer than 30m to manual bucket.
+
+## Data processing
+
+- Check import addresses against OSM adddresses. Flag those in the proximity of existing addresses and exclude them.
 ```
 python data_prep/main.py --check_address
 ```
-- Check if buildings overlap with OSM roads/rail tracks. Move overlapping ones to manual bucket.
+- Check import buildings against OSM buildings. Flag those intersecting with existing buildings and exlude them.
+```
+python data_prep/main.py --check_building
+```
+- Check buildings crossing highway and railway features. Add `fixme=highway/railway crosses building`
 ```
 python data_prep/main.py --check_road_rail
 ```
-- Check numbers
-```
-python data_prep/main.py --report
-```
 
-You should have 2 tables: `buildings_no_overlap` for the bulk process (i.e. buildings not interfering with existing OSM data) and `buildings_overlap` for the manual process (i.e. buildings that need manual inspection).
+...
+
 
 ## Data conversion
 
