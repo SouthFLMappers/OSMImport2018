@@ -91,24 +91,28 @@ python data_prep/main.py --check_building
 ```
 python data_prep/main.py --check_road_rail
 ```
-
-...
+- Assign address to buildings where there is only one overlapping address point (or there is only one within 5 meters)
+```
+python data_prep/main.py --assign_address
+```
 
 
 ## Data conversion
 
+- Get rid of unnecessary nodes using the Douglas-Peucker algorithm (tolerance: 0.3 meters)
+```
+python data_prep/main.py --simplify
+```
+
 - Clone `ogr2osm` in parent directory
 ```
 cd ..
-sudo apt-get install -y python-gdal python-lxml
 git clone --recursive https://github.com/pnorman/ogr2osm
 ```
 
-- Navigate back to `MiamiOSM-buildings` and convert `buildings_no_overlap` t an *.osm file (manual bucket)
-```
-cd MiamiOSM-buildings
-./data_conversion/generate_osm_files.sh bulk
-```
+- Navigate back to `OSMImport2018`
+
+[TODO]
 
 - Generate supplementary files with overlapping buildings and addresses for each block group
 ```
