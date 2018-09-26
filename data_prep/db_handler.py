@@ -267,6 +267,8 @@ class DBHandler():
         self.conn.commit()
 
     def assign_address(self):
+        old_isolation_level = self.conn.isolation_level
+        self.conn.set_isolation_level(0)
         self.cursor.execute('''
         update building_footprint_2d bldg
         set 
@@ -293,7 +295,7 @@ class DBHandler():
             left join address_with_condo addr on pairs.ids = addr.objectid
             where bldg.objectid = pairs.building_id
         )  x
-        where bldg.objectid = x.bldgid
+        where bldg.objectid = x.bldgid;
         ''')
         self.conn.commit()
         self.cursor.execute('''update building_footprint_2d bldg
@@ -321,19 +323,20 @@ class DBHandler():
             left join address_with_condo addr on pairs.ids = addr.objectid
             where bldg.objectid = pairs.building_id
         )  x
-        where bldg.objectid = x.bldgid
+        where bldg.objectid = x.bldgid;
         ''')
         self.conn.commit()
         self.cursor.execute('''
             update address_with_condo a
             set
                 assigned_to_bldg = true
-            from (select geom from building_footprint_2d where addr_assigned = true) b
+            from (select geom_merc from building_footprint_2d where addr_assigned = true) b
             where 
                 a.assigned_to_bldg = false and 
-                st_dwithin(st_transform(a.geom, 3857), st_stransform(b.geom, 3857), 5)
+                st_dwithin(a.geom_merc, b.geom_merc, 5);
         ''')
         self.conn.commit()
+        self.conn.set_isolation_level(old_isolation_level )
 
     def check_building_highway_railway(self):
         self.cursor.execute('''
