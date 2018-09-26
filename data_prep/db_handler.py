@@ -87,9 +87,13 @@ class DBHandler():
         highway_index_sql = 'CREATE INDEX osm_highway_railway_geom_idx ON osm_highway_railway USING GIST (geom);'
         address_county_index_sql = 'CREATE INDEX address_geom_idx ON address_with_condo USING GIST (geom);'
         building_county_index_sql = 'CREATE INDEX building_geom_idx ON building_footprint_2d USING GIST (geom)'
+        building_county_merc_index_sql = 'create index building_merc_idx on building_footprint_2d using gist (geom_merc)'
+        addr_county_merc_index_sql = 'create index addr_merc_idx on address_with_condo using gist (geom_merc)'
         self.cursor.execute(building_index_sql)
         self.cursor.execute(address_index_sql)
         self.cursor.execute(highway_index_sql)
+        self.cursor.execute(building_county_merc_index_sql)
+        self.cursor.execute(addr_county_merc_index_sql)
         self.conn.commit()
 
     def update_stats(self):
@@ -210,7 +214,9 @@ class DBHandler():
         self.cursor.execute('alter table building_footprint_2d drop column if exists in_osm')
         self.cursor.execute('alter table building_footprint_2d add column in_osm boolean')
         self.cursor.execute('update building_footprint_2d set in_osm = false')
-        
+        self.cursor.execute("select addgeometrycolumn('building_footprint_2d', 'geom_merc', 3857, 'multipolygon', 2);")
+        self.cursor.execute("select addgeometrycolumn('address_with_condo', 'geom_merc', 3857, 'point', 2);")
+
         self.cursor.execute('''alter table building_footprint_2d
                                                     add column addr_assigned boolean,
                                                     add column zip int,
@@ -219,12 +225,17 @@ class DBHandler():
                                                     add column pre_dir varchar,
                                                     add column suf_dir varchar,
                                                     add column st_type varchar,
-                                                    add column st_name varchar;
+                                                    add column st_name varchar,
+                                                    add column road_intersect boolean;
                                         update building_footprint_2d set addr_assigned = false;
                                         alter table address_with_condo add column assigned_to_bldg boolean;
                                         update address_with_condo set assigned_to_bldg = false; 
                                             ''')
         self.conn.commit()
+        self.cursor.execute('update building_footprint_2d set geom_merc = st_transform(geom, 3857);')
+        self.cursor.execute('update address_with_condo set geom_merc = st_transform(geom, 3857);')
+        self.conn.commit()
+
 
     def check_exitsing_addresses(self):
         self.cursor.execute('''
@@ -257,81 +268,60 @@ class DBHandler():
 
     def assign_address(self):
         self.cursor.execute('''
-        -- update buildings where there's only one address point within
-            update building_footprint_2d
-            set
-                zip = x.zip,
-                mailing_mu = x.mailing_mu,
-                hse_num = x.hse_num,
-                st_name = x.st_name,
-                st_type = x.st_type,
-                pre_dir = x.pre_dir,
-                suf_dir = x.suf_dir,
-				addr_assigned = true
-            from (select b.objectid as building_id, a.hse_num, a.sname, a.mailing_mu, a.zip, num_address.count as count_addresses, a.pre_dir, a.suf_dir, a.st_name, a.st_type
-                from
-                    building_footprint_2d b,
-                    address_with_condo a,
-                    -- Get number of addresses within each large building
-                    (select building.objectid as building_id, count(a.objectid) 
+        update building_footprint_2d bldg
+        set 
+            zip = x.zip,
+            mailing_mu = x.mailing_mu,
+            hse_num = x.hse_num,
+            st_name = x.st_name,
+            st_type = x.st_type,
+            pre_dir = x.pre_dir,
+            suf_dir = x.suf_dir,
+            addr_assigned = true
+        from (
+            select bldg.objectid as bldgid, addr.objectid as addrid, addr.* from
+                building_footprint_2d as bldg
+            left join (select b.building_id, b.ids[1] from
+                (select building.objectid as building_id, array_agg(a.objectid) as ids , count(a.objectid) as cnt
                     	from 
                             building_footprint_2d building,
                         	address_with_condo a
                    		where
                         	st_within(a.geom, building.geom) and building.in_osm = false
-                    	group by building_id) num_address
- 				where
-                    b.objectid = num_address.building_id and
-                    num_address.count = 1 and
-                    b.geom && a.geom and
-                    st_within(a.geom, b.geom)
-            ) x
-			where
-                building_footprint_2d.objectid = x.building_id
+                    	group by building_id, building.geom) b
+                where b.cnt = 1) pairs on bldg.objectid = pairs.building_id
+            left join address_with_condo addr on pairs.ids = addr.objectid
+            where bldg.objectid = pairs.building_id
+        )  x
+        where bldg.objectid = x.bldgid
         ''')
         self.conn.commit()
-        self.cursor.execute('''
-            update address_with_condo a
-            set
-                assigned_to_bldg = true
-            from (select geom from building_footprint_2d where addr_assigned = true) b
-            where 
-                st_within(a.geom, b.geom )
-        ''')
-        self.conn.commit()
-        self.cursor.execute('''
-        -- update buildings where they are close
-            update building_footprint_2d
-            set
-                zip = x.zip,
-                mailing_mu = x.mailing_mu,
-                hse_num = x.hse_num,
-                st_name = x.st_name,
-                st_type = x.st_type,
-                pre_dir = x.pre_dir,
-                suf_dir = x.suf_dir,
-				addr_assigned = true
-            from (select b.objectid as building_id, a.hse_num, a.sname, a.mailing_mu, a.zip, num_address.count as count_addresses, a.pre_dir, a.suf_dir, a.st_name, a.st_type
-                from
-                    building_footprint_2d b,
-                    address_with_condo a,
-                    -- Get number of addresses within each large building
-                    (select building.objectid as building_id, count(a.objectid) 
+        self.cursor.execute('''update building_footprint_2d bldg
+        set 
+            zip = x.zip,
+            mailing_mu = x.mailing_mu,
+            hse_num = x.hse_num,
+            st_name = x.st_name,
+            st_type = x.st_type,
+            pre_dir = x.pre_dir,
+            suf_dir = x.suf_dir,
+            addr_assigned = true
+        from (
+            select bldg.objectid as bldgid, addr.objectid as addrid, addr.* from
+                building_footprint_2d as bldg
+            left join (select b.building_id, b.ids[1] from
+                (select building.objectid as building_id, array_agg(a.objectid) as ids , count(a.objectid) as cnt
                     	from 
-                        	building_footprint_2d building,
+                            building_footprint_2d building,
                         	address_with_condo a
                    		where
-							(building.addr_assigned = false and building.in_osm = false) and (a.assigned_to_bldg is false and a.in_osm = false) and 
-                        	st_dwithin(a.geom::geography, building.geom::geography, 5)
-                    	group by building_id) num_address
- 				where
-                    b.objectid = num_address.building_id and
-                    num_address.count = 1 and
-                    b.geom && a.geom and
-                    st_dwithin(a.geom::geography, b.geom::geography, 5)
-            ) x
-			where
-                building_footprint_2d.objectid = x.building_id
+                        	st_dwithin(a.geom_merc, building.geom_merc, 5) and building.in_osm = false and building.addr_assigned = false
+                    	group by building_id, building.geom) b
+                where b.cnt = 1) pairs on bldg.objectid = pairs.building_id
+            left join address_with_condo addr on pairs.ids = addr.objectid
+            where bldg.objectid = pairs.building_id
+        )  x
+        where bldg.objectid = x.bldgid
         ''')
         self.conn.commit()
         self.cursor.execute('''
@@ -341,7 +331,7 @@ class DBHandler():
             from (select geom from building_footprint_2d where addr_assigned = true) b
             where 
                 a.assigned_to_bldg = false and 
-                st_dwithin(a.geom::geography, b.geom::geography, 5 )
+                st_dwithin(st_transform(a.geom, 3857), st_stransform(b.geom, 3857), 5)
         ''')
         self.conn.commit()
 
