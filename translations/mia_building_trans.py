@@ -49,6 +49,7 @@ def pretty_type(type):
         "CTRS": "Centers",
         "CIR": "Circle",
         "CIRS": "Circles",
+        "CONC": "Concourse",
         "CLF": "Cliff",
         "CLFS": "Cliffs",
         "CLB": "Club",
@@ -254,6 +255,7 @@ def filterTags(attrs):
     if 'zip' in attrs:
         if len(attrs['zip']) > 0:
             tags['addr:postcode'] = attrs['zip']
+            tags['addr:state'] = 'FL'
 
     if 'mailing_mu' in attrs:
         if len(attrs['mailing_mu']) > 0:
@@ -275,7 +277,7 @@ def filterTags(attrs):
 
     if 'suf_dir' in attrs:
         if len(attrs['suf_dir']) > 0:
-            street.append(pretty_preffix(attrs['suf_dir']))
+            street.append(pretty_prefix(attrs['suf_dir']))
 
     street_name = ' '.join(street)
     if street_name is not '':
@@ -290,6 +292,5 @@ def filterTags(attrs):
             tags['fixme'] = "highway/railway crosses building"
 
     tags['building'] = 'yes'
-    #tags['source'] = 'Miami-Dade County GIS Open Data, http://gis.mdc.opendata.arcgis.com'
 
     return tags

@@ -45,6 +45,7 @@ def pretty_type(type):
         "CTRS": "Centers",
         "CIR": "Circle",
         "CIRS": "Circles",
+         "CONC": "Concourse",
         "CLF": "Cliff",
         "CLFS": "Cliffs",
         "CLB": "Club",
@@ -286,6 +287,5 @@ def filterTags(attrs):
         if len(attrs['hse_num']) > 0:
             tags['addr:housenumber'] = attrs['hse_num']
 
-    #tags['source'] = 'Miami-Dade County GIS Open Data, http://gis.mdc.opendata.arcgis.com'
-    print tags
+    tags['addr:state'] = 'FL'
     return tags
