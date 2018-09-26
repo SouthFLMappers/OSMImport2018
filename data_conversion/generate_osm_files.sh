@@ -2,8 +2,7 @@
 
 path=$(pwd)
 
-dsn="PG:dbname=osmbuildings_miami user=postgres password=postgres host=localhost"
-translation="mia_building_trans.py"
+dsn="PG:dbname=osm_test user=postgres password=postgres host=localhost"
 
 # Find ogr2osm in parent directories
   while [[ "$path" != "" && ! -e "$path/ogr2osm" ]]; do
@@ -16,21 +15,34 @@ echo "DB connection: $dsn"
 echo "Translation file: $translation"
 echo "ogr2osm dir: $ogr2osm_dir"
 
-if [ "$1" == 'bulk' ]; then
-  echo "Generating osm file for Bulk upload..."
+if [ "$1" == 'test' ]; then
+  echo "Generating test osm files"
   
-  mkdir -p bulk
-  out_folder='bulk'
+  mkdir -p test
+  out_folder='test'
 
-  step=5000
-  for (( cnt=0; cnt<=100000; cnt+=step )); do
-    echo $cnt
-    output_name="mia_building_bulk_"$cnt".osm"
-    max_id=$cnt+$step
-    sql="SELECT height, objectid, zip, city, pre_dir, st_name, st_type, suf_dir, house_num, geom from buildings_no_overlap where objectid >= $cnt and objectid < $max_id"
+  python $ogr2osm_dir/ogr2osm.py "$dsn" -t ../translations/mia_address_trans.py -f -o $out_folder"/mia_address_test1.osm" --sql "SELECT hse_num, st_type, zip, mailing_mu, st_name, pre_dir, suf_dir, geom from address_with_condo where in_osm = false and assigned_to_bldg = false and st_within(geom, st_setsrid(st_makeenvelope(-80.42691,25.695398,-80.314335,25.852301), 4326))"
+  python $ogr2osm_dir/ogr2osm.py "$dsn" -t ../translations/mia_building_trans.py -f -o $out_folder"/mia_building_test1.osm" --sql "SELECT height, hse_num,st_type, zip, mailing_mu, st_name, pre_dir, suf_dir, road_intersect, geom from building_footprint_2d where in_osm = false and st_within(geom, st_setsrid(st_makeenvelope(-80.42691,25.695398,-80.314335,25.852301), 4326))"
 
-    python $ogr2osm_dir/ogr2osm.py "$dsn" -t $translation -f -o $out_folder"/"$output_name --sql "$sql"
-  done
+  osmconvert $out_folder/mia_building_test1.osm --fake-author -o=$out_folder/mia_building_test1_fake.osm
+  osmconvert $out_folder/mia_address_test1.osm --fake-author -o=$out_folder/mia_address_test1_fake.osm 
+
+  osmosis --read-xml $out_folder/mia_building_test1_fake.osm --sort type="TypeThenId" --write-xml $out_folder/mia_building_test1_sort.osm
+  osmosis --read-xml $out_folder/mia_address_test1_fake.osm --sort type="TypeThenId" --write-xml $out_folder/mia_address_test1_sort.osm
+  osmosis --read-xml $out_folder/mia_building_test1_sort.osm --read-xml $out_folder/mia_building_test1_sort.osm --merge --write-xml $out_folder/mia_merged_test1.osm
+
+
+    python $ogr2osm_dir/ogr2osm.py "$dsn" -t ../translations/mia_address_trans.py -f -o $out_folder"/mia_address_test2.osm" --sql "SELECT hse_num, st_type, zip, mailing_mu, st_name, pre_dir, suf_dir, geom from address_with_condo where in_osm = false and assigned_to_bldg = false and st_within(geom, st_setsrid(st_makeenvelope(-80.222478,25.834611,-80.109904,25.878328), 4326))"
+  python $ogr2osm_dir/ogr2osm.py "$dsn" -t ../translations/mia_building_trans.py -f -o $out_folder"/mia_building_test2.osm" --sql "SELECT height, hse_num,st_type, zip, mailing_mu, st_name, pre_dir, suf_dir, road_intersect, geom from building_footprint_2d where in_osm = false and st_within(geom, st_setsrid(st_makeenvelope(-80.222478,25.834611,-80.109904,25.878328), 4326))"
+
+  osmconvert $out_folder/mia_building_test2.osm --fake-author -o=$out_folder/mia_building_test2_fake.osm
+  osmconvert $out_folder/mia_address_test2.osm --fake-author -o=$out_folder/mia_address_test2_fake.osm 
+
+  osmosis --read-xml $out_folder/mia_building_test2_fake.osm --sort type="TypeThenId" --write-xml $out_folder/mia_building_test2_sort.osm
+  osmosis --read-xml $out_folder/mia_address_test2_fake.osm --sort type="TypeThenId" --write-xml $out_folder/mia_address_test2_sort.osm
+  osmosis --read-xml $out_folder/mia_building_test2_sort.osm --read-xml $out_folder/mia_address_test2_sort.osm --merge --write-xml $out_folder/mia_merged_test2.osm
+
+
 
 fi
 
