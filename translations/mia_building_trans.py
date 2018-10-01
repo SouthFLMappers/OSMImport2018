@@ -22,6 +22,8 @@ st_type        type of street          addr:street
 Address abbreviation source: USPS (https://pe.usps.com/text/pub28/28apc_002.htm)
 '''
 
+cap_street = ['SR', 'US', 'FL']
+
 def pretty_type(type):
     types_dict = {
         "ALY": "Alley",
@@ -269,7 +271,9 @@ def filterTags(attrs):
 
     if 'st_name' in attrs:
         if len(attrs['st_name']) > 0:
-            street.append(capwords(attrs['st_name'].lower()))
+            split = attrs['st_name'].split()
+            addr =[ x.capitalize() if x not in cap_street  else x for x in split ]
+            street.append(' '.join(addr))
 
     if 'st_type' in attrs:
         if len(attrs['st_type']) > 0:
