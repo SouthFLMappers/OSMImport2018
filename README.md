@@ -24,7 +24,8 @@ PLUS `osmconvert`, `ogr2osm`, ...
 Download the data files from here:
 ```
 Building Footprint 2D - http://gis-mdc.opendata.arcgis.com/datasets/building-footprint-2d
-Address with condo - []
+Address with condo - http://gis-mdc.opendata.arcgis.com/datasets/address-with-condo?geometry=-82.952%2C25.187%2C-77.854%2C26.054
+Census Tracts - http://gis-mdc.opendata.arcgis.com/datasets/tract-2010
 ```
 
 ## Data preparation
@@ -110,11 +111,9 @@ cd ..
 git clone --recursive https://github.com/pnorman/ogr2osm
 ```
 
-- Navigate back to `OSMImport2018`
-
-[TODO]
-
-- Generate supplementary files with overlapping buildings and addresses for each block group
+- Navigate back to the project folder
+- Generate test datasets. Data files for all tract polygons: use `tract`
 ```
-./data_conversion/generate_osm_files.sh review
+cd data_conversion
+./generate_osm_files.sh test
 ```
