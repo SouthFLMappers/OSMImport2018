@@ -275,10 +275,10 @@ def filterTags(attrs):
             addr =[ x.capitalize() if x not in cap_street  else x for x in split ]
             for i, part in enumerate(addr):
                 if part[:2] == 'Mc':
-                    addr[i] = part[:2] + part[:2].capitalize()
+                    addr[i] = part[:2] + part[2:].capitalize()
             for i, part in enumerate(addr):
                 if part[:3] == 'Mac':
-                    addr[i] = part[:3] + part[:3].capitalize()
+                    addr[i] = part[:3] + part[3:].capitalize()
             street.append(' '.join(addr))
 
     if 'st_type' in attrs:
