@@ -167,6 +167,7 @@ def pretty_type(type):
         "PR": "Prairie",
         "RADL": "Radial",
         "RAMP": "Ramp",
+        "RUN": "Run",
         "RNCH" : "Ranch",
         "RPD": "Rapid",
         "RPDS": "Rapids",
